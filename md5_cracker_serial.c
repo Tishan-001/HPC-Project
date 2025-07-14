@@ -59,10 +59,10 @@ long long calculate_combinations(int length) {
     return total;
 }
 
-int crack_md5_brute_force(const char *target_hash, char *cracked_password) {
+int crack_md5_brute_force(const char *target_hash, char *cracked_password, long long *total_attempts) {
     char current_password[MAX_PASSWORD_LENGTH + 1];
     char computed_hash[33];
-    long long attempts = 0;
+    *total_attempts = 0;
     
     printf("Starting brute-force attack on hash: %s\n", target_hash);
     printf("Character set: %s\n", CHARSET);
@@ -77,12 +77,12 @@ int crack_md5_brute_force(const char *target_hash, char *cracked_password) {
         initialize_password(current_password, length);
         
         do {
-            attempts++;
+            (*total_attempts)++;
             
             compute_md5(current_password, computed_hash);
             
-            if (attempts % 100000 == 0) {
-                printf("Attempts: %lld, Current: %s\n", attempts, current_password);
+            if (*total_attempts % 100000 == 0) {
+                printf("Attempts: %lld, Current: %s\n", *total_attempts, current_password);
             }
             
             // Check if hash matches
@@ -90,14 +90,14 @@ int crack_md5_brute_force(const char *target_hash, char *cracked_password) {
                 strcpy(cracked_password, current_password);
                 printf("\n*** PASSWORD FOUND! ***\n");
                 printf("Password: %s\n", current_password);
-                printf("Total attempts: %lld\n", attempts);
+                printf("Total attempts: %lld\n", *total_attempts);
                 return 1;
             }
             
         } while (generate_next_password(current_password, length));
     }
     
-    printf("\nPassword not found after %lld attempts.\n", attempts);
+    printf("\nPassword not found after %lld attempts.\n", *total_attempts);
     printf("Maximum password length (%d) reached.\n", MAX_PASSWORD_LENGTH);
     return 0;
 }
@@ -105,6 +105,7 @@ int crack_md5_brute_force(const char *target_hash, char *cracked_password) {
 int main(int argc, char *argv[]) {
     char target_hash[33];
     char cracked_password[MAX_PASSWORD_LENGTH + 1];
+    long long total_attempts = 0;
     clock_t start_time, end_time;
     double execution_time;
     
@@ -122,12 +123,12 @@ int main(int argc, char *argv[]) {
     
     start_time = clock();
     
-    int result = crack_md5_brute_force(target_hash, cracked_password);
+    int result = crack_md5_brute_force(target_hash, cracked_password, &total_attempts);
     
     end_time = clock();
     execution_time = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     
-    printf("\n=== Results ===\n");
+    printf("\n=== FINAL RESULTS SERIAL VERSION===\n");
     if (result) {
         printf("Status: SUCCESS\n");
         printf("Cracked password: %s\n", cracked_password);
@@ -135,7 +136,20 @@ int main(int argc, char *argv[]) {
         printf("Status: FAILED\n");
         printf("Password not found within search space.\n");
     }
+    printf("Total attempts: %lld\n", total_attempts);
     printf("Execution time: %.2f seconds\n", execution_time);
+    if (execution_time > 0) {
+        printf("Attempts per second: %.0f\n", total_attempts / execution_time);
+    }
     
     return 0;
 }
+
+/*
+Compilation instructions:
+gcc -o md5_cracker_serial md5_cracker_serial.c -lssl -lcrypto
+
+Execution instructions:
+./md5_cracker_serial 5d41402abc4b2a76b9719d911017c592
+
+*/
