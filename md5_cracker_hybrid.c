@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
     
     // Print results (only from rank 0)
     if (rank == 0) {
-        printf("\n=== FINAL RESULTS HYBRID VERSION===\n");
+        printf("\n=== FINAL RESULTS HYBRID VERSION ===\n");
         if (success && result.found) {
             printf("Status: SUCCESS\n");
             printf("Password found: %s\n", result.password);

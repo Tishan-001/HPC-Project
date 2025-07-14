@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
     end_time = clock();
     execution_time = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     
-    printf("\n=== FINAL RESULTS SERIAL VERSION===\n");
+    printf("\n=== FINAL RESULTS SERIAL VERSION ===\n");
     if (result) {
         printf("Status: SUCCESS\n");
         printf("Cracked password: %s\n", cracked_password);

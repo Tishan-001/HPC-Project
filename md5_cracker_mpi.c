@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
     
     // Print results (only from master process)
     if (rank == 0) {
-        printf("\n=== FINAL RESULTS MPI VERSION===\n");
+        printf("\n=== FINAL RESULTS MPI VERSION ===\n");
         if (success && result.found) {
             printf("Status: SUCCESS\n");
             printf("Password found: %s\n", result.password);
@@ -295,9 +295,9 @@ int main(int argc, char *argv[]) {
 
 /*
 Compilation instructions:
-mpicc -o mpi_md5_cracker mpi_md5_cracker.c -lssl -lcrypto
+mpicc -o md5_cracker_mpi md5_cracker_mpi.c -lssl -lcrypto
 
 Execution instructions:
-mpirun -np 4 ./mpi_md5_cracker 5d41402abc4b2a76b9719d911017c592
+mpirun -np 4 ./md5_cracker_mpi 5d41402abc4b2a76b9719d911017c592
 
 */

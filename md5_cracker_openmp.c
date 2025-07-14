@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
         
     int result = crack_md5_openmp(target_hash, cracked_password);
         
-    printf("\n=== FINAL RESULTS OPENMP VERSION===\n");
+    printf("\n=== FINAL RESULTS OPENMP VERSION ===\n");
     if (result) {
         printf("Status: SUCCESS\n");
         printf("Cracked password: %s\n", cracked_password);
@@ -168,6 +168,9 @@ int main(int argc, char *argv[]) {
     printf("Total attempts: %lld\n", total_attempts);
     printf("Threads used: %d\n", num_threads);
     printf("Execution time: %.2f seconds\n", execution_time);
+    if (execution_time > 0) {
+        printf("Attempts per second: %.0f\n", total_attempts / execution_time);
+    }
     
     return 0;
 }
