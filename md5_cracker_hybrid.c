@@ -9,7 +9,7 @@
 #define MAX_PASSWORD_LENGTH 8
 #define CHARSET "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 #define CHARSET_SIZE 62
-#define WORK_CHUNK_SIZE 1000000  // Number of passwords each thread processes before checking for termination
+#define WORK_CHUNK_SIZE 1000000
 
 typedef struct {
     int found;
