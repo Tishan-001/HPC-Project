@@ -160,6 +160,11 @@ int main(int argc, char *argv[]) {
     if (result) {
         printf("Status: SUCCESS\n");
         printf("Cracked password: %s\n", cracked_password);
+        
+        // Verify the result
+        char verify_hash[33];
+        compute_md5(cracked_password, verify_hash);
+        printf("Verification: %s\n", strcmp(verify_hash, target_hash) == 0 ? "PASSED" : "FAILED");
     } else {
         printf("Status: FAILED\n");
         printf("Password not found within search space.\n");
