@@ -60,11 +60,9 @@ int crack_md5_hybrid(const char *target_hash, int rank, int size, result_t *resu
     for (int length = 1; length <= MAX_PASSWORD_LENGTH && !global_found; length++) {
         long long total_combinations = calculate_combinations(length);
         
-        // Calculate work distribution among MPI processes
         long long combinations_per_process = total_combinations / size;
         long long remainder = total_combinations % size;
         
-        // Calculate this process's start and end indices
         long long start_index = rank * combinations_per_process;
         if (rank < remainder) {
             start_index += rank;
@@ -80,26 +78,21 @@ int crack_md5_hybrid(const char *target_hash, int rank, int size, result_t *resu
                    rank, start_index, end_index - 1, combinations_per_process);
         }
         
-        // OpenMP parallel region
         #pragma omp parallel
         {
             char thread_password[MAX_PASSWORD_LENGTH + 1];
-            char thread_hash[33];  // Each thread has its own hash buffer
+            char thread_hash[33];
             long long thread_attempts = 0;
             
             #pragma omp for schedule(dynamic, WORK_CHUNK_SIZE) nowait
             for (long long i = start_index; i < end_index; i++) {
-                // Check if password already found by any process/thread
-                if (global_found) continue;  // Use continue instead of break
+                if (global_found) continue;
                 
-                // Generate password from index
                 index_to_password(i, thread_password, length);
                 
-                // Compute MD5 hash
                 compute_md5(thread_password, thread_hash);
                 thread_attempts++;
                 
-                // Progress reporting every 100,000 attempts
                 if (thread_attempts % 100000 == 0) {
                     #pragma omp critical
                     {
@@ -108,7 +101,6 @@ int crack_md5_hybrid(const char *target_hash, int rank, int size, result_t *resu
                     }
                 }
                 
-                // Check if hash matches
                 if (strcmp(thread_hash, target_hash) == 0) {
                     #pragma omp critical
                     {
@@ -124,17 +116,14 @@ int crack_md5_hybrid(const char *target_hash, int rank, int size, result_t *resu
                                    rank, omp_get_thread_num(), thread_password);
                         }
                     }
-                    // Force exit from the loop
                     continue;
                 }
             }
             
-            // Accumulate thread attempts
             #pragma omp atomic
             total_attempts += thread_attempts;
         }
         
-        // Check if any process found the password after the parallel region
         int any_found = 0;
         MPI_Allreduce(&global_found, &any_found, 1, MPI_INT, MPI_LOR, MPI_COMM_WORLD);
         
@@ -146,17 +135,14 @@ int crack_md5_hybrid(const char *target_hash, int rank, int size, result_t *resu
             break;
         }
         
-        // Progress reporting
         if (rank == 0) {
             printf("Completed length %d search\n", length);
         }
     }
     
-    // Gather results from all processes
     result_t all_results[size];
     MPI_Gather(result, sizeof(result_t), MPI_BYTE, all_results, sizeof(result_t), MPI_BYTE, 0, MPI_COMM_WORLD);
     
-    // Find the process that found the password
     if (rank == 0) {
         for (int i = 0; i < size; i++) {
             if (all_results[i].found) {
@@ -169,10 +155,8 @@ int crack_md5_hybrid(const char *target_hash, int rank, int size, result_t *resu
         }
     }
     
-    // Broadcast result to all processes
     MPI_Bcast(result, sizeof(result_t), MPI_BYTE, 0, MPI_COMM_WORLD);
     
-    // Sum up total attempts from all processes
     long long global_attempts = 0;
     MPI_Reduce(&total_attempts, &global_attempts, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
     
@@ -189,12 +173,10 @@ int main(int argc, char *argv[]) {
     result_t result = {0, "", 0, -1, -1};
     double start_time, end_time;
     
-    // Initialize MPI
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     
-    // Get target hash from command line
     if (argc > 1) {
         strcpy(target_hash, argv[1]);
     } else {
@@ -205,7 +187,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    // Validate hash length
     if (strlen(target_hash) != 32) {
         if (rank == 0) {
             printf("Error: Invalid MD5 hash length. Expected 32 characters.\n");
@@ -214,7 +195,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    // Print header information
     if (rank == 0) {
         printf("=== Hybrid MPI + OpenMP MD5 Brute Force Cracker ===\n");
         printf("Target hash: %s\n", target_hash);
@@ -227,16 +207,12 @@ int main(int argc, char *argv[]) {
         printf("\nStarting hybrid parallel search...\n");
     }
     
-    // Start timing
     start_time = MPI_Wtime();
     
-    // Perform the crack attempt
     int success = crack_md5_hybrid(target_hash, rank, size, &result);
     
-    // End timing
     end_time = MPI_Wtime();
     
-    // Print results (only from rank 0)
     if (rank == 0) {
         printf("\n=== FINAL RESULTS HYBRID VERSION ===\n");
         if (success && result.found) {
@@ -244,7 +220,6 @@ int main(int argc, char *argv[]) {
             printf("Password found: %s\n", result.password);
             printf("Found by: Process %d, Thread %d\n", result.finding_process, result.finding_thread);
             
-            // Verify the result
             char verify_hash[33];
             compute_md5(result.password, verify_hash);
             printf("Verification: %s\n", strcmp(verify_hash, target_hash) == 0 ? "PASSED" : "FAILED");
@@ -260,7 +235,6 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    // Finalize MPI
     MPI_Finalize();
     return success ? 0 : 1;
 }
